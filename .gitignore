@@ -1,0 +1,49 @@
+# ==========================================
+# Aegis Sentinel - Git Ignore Configuration
+# ==========================================
+
+# Security & Environment Variables
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Virtual Environments (uv / pip)
+.venv/
+venv/
+env/
+ENV/
+
+# Python Cache & Compiled Files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Logs & Databases
+*.log
+*.sqlite3
+*.db
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
