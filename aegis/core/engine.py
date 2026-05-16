@@ -60,7 +60,14 @@ def run() -> None:
     finally:
         # 5. Graceful Shutdown
         interceptor.stop()
-        asyncio.run_coroutine_threadsafe(threat_intel.close(), async_loop)
+        
+        # Esperar a que el cliente HTTP asíncrono cierre bien antes de matar el loop
+        close_future = asyncio.run_coroutine_threadsafe(threat_intel.close(), async_loop)
+        try:
+            close_future.result(timeout=2.0)
+        except Exception as e:
+            logger.debug("shutdown_cleanup_timeout", error=str(e))
+            
         async_loop.call_soon_threadsafe(async_loop.stop)
         loop_thread.join(timeout=2.0)
         logger.info("aegis_shutdown_complete")

@@ -37,6 +37,8 @@ class AegisInterceptor:
 
     def _packet_handler(self, nfq_packet: Any) -> None:
         """Dispatches packets to the async loop, freeing the kernel queue."""
+        logger.info("packet_intercepted", action="allowed", status="OK")
+        nfq_packet.retain()
         self._loop.call_soon_threadsafe(
             lambda: self._loop.create_task(self.evaluate_flow(nfq_packet))
         )
