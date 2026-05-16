@@ -1,4 +1,7 @@
-FROM ghcr.io/astral-sh/uv:python3.11-debian-slim
+
+FROM python:3.11-slim
+
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvX /usr/local/bin/
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -11,10 +14,10 @@ WORKDIR /app
 
 COPY pyproject.toml uv.lock ./
 
-RUN uv sync --no-cache
+RUN /usr/local/bin/uv sync --no-cache
 
 COPY . .
 
 ENV PYTHONUNBUFFERED=1
 
-CMD ["uv", "run", "python", "-m", "aegis.core.engine"]
+CMD ["/usr/local/bin/uv", "run", "python", "-m", "aegis.core.engine"]
