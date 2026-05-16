@@ -1,16 +1,17 @@
-FROM ghcr.io/astral-sh/uv:python3.11-alpine
+FROM ghcr.io/astral-sh/uv:python3.11-debian-slim
 
-RUN apk add --no-cache \
-    gcc \
-    musl-dev \
-    libnetfilter_queue-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libnetfilter-queue-dev \
     iptables \
-    wireguard-tools
+    wireguard-tools \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-cache
+
+RUN uv sync --no-cache
 
 COPY . .
 
