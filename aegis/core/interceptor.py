@@ -1,8 +1,8 @@
 import asyncio
-import structlog
 from typing import Any
 from netfilterqueue import NetfilterQueue
-from scapy.all import IP
+from scapy.all import IP, TCP, UDP
+import structlog
 
 from aegis.modules.threat_intel import AsyncThreatIntel
 from aegis.modules.policy_engine import PolicyEngine
@@ -37,7 +37,6 @@ class AegisInterceptor:
 
     def _packet_handler(self, nfq_packet: Any) -> None:
         """Dispatches packets to the async loop, freeing the kernel queue."""
-        logger.info("packet_intercepted", action="allowed", status="OK")
         nfq_packet.retain()
         self._loop.call_soon_threadsafe(
             lambda: self._loop.create_task(self.evaluate_flow(nfq_packet))
@@ -46,9 +45,38 @@ class AegisInterceptor:
     async def evaluate_flow(self, nfq_packet: Any) -> None:
         """Executes the asynchronous multi-layered security pipeline."""
         try:
+            # Parse Layer 3 (Network) Metadata
             packet = IP(nfq_packet.get_payload())
             src_ip = packet.src
             dst_ip = packet.dst
+            
+            # Default Layer 4 (Transport) Metadata
+            protocol = "UNKNOWN"
+            src_port = None
+            dst_port = None
+
+            # Extract Layer 4 protocols and ports
+            if packet.haslayer(TCP):
+                protocol = "TCP"
+                src_port = packet[TCP].sport
+                dst_port = packet[TCP].dport
+            elif packet.haslayer(UDP):
+                protocol = "UDP"
+                src_port = packet[UDP].sport
+                dst_port = packet[UDP].dport
+            else:
+                protocol = str(packet.proto)
+
+            self.logger.info(
+                "packet_intercepted",
+                status="OK",
+                action="allowed",
+                src_ip=src_ip,
+                dst_ip=dst_ip,
+                protocol=protocol,
+                src_port=src_port,
+                dst_port=dst_port
+            )
 
             # Layer 1: Fast-Path / Flow State Verification
             if self.flow_table.is_flow_active(src_ip, dst_ip):
