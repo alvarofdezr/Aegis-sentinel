@@ -1,4 +1,7 @@
 import asyncio
+import logging
+import sys
+import structlog     
 from typing import Any
 from netfilterqueue import NetfilterQueue
 from scapy.all import IP, TCP, UDP
@@ -7,6 +10,25 @@ import structlog
 from aegis.modules.threat_intel import AsyncThreatIntel
 from aegis.modules.policy_engine import PolicyEngine
 from aegis.core.flow_table import FlowTable
+
+logging.basicConfig(
+    format="%(message)s",
+    level=logging.INFO,
+    handlers=[
+        logging.FileHandler("/var/log/aegis/eve.json"), 
+        
+        logging.StreamHandler(sys.stdout) 
+    ]
+)
+
+structlog.configure(
+    processors=[
+        structlog.stdlib.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.processors.JSONRenderer()
+    ],
+    logger_factory=structlog.stdlib.LoggerFactory(),
+)
 
 logger = structlog.get_logger()
 
